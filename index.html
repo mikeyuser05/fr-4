@@ -3,220 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Interactive Hub</title>
+    <title>Pro Interactive Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --bg: #e0e5ec;
-            --card: #e0e5ec;
-            --text: #31344b;
-            --accent: #6d5dfc;
-            --shadow: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5);
-        }
-
-        .dark-mode {
-            --bg: #1a1d23;
-            --card: #242933;
-            --text: #e5e9f0;
-            --accent: #88c0d0;
-            --shadow: 5px 5px 15px #121417, -5px -5px 15px #2a303a;
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --accent: #38bdf8;
+            --neon: #00f2ff;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
+            overflow: hidden; /* Background particles handle scroll */
+            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
-            transition: 0.5s;
-            overflow-x: hidden;
         }
 
-        /* Layout */
-        .main-layout {
+        /* Animated Background Particles */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        /* Draggable Container */
+        .dashboard {
             display: flex;
-            gap: 30px;
-            padding: 40px;
+            gap: 20px;
+            padding: 50px;
             flex-wrap: wrap;
             justify-content: center;
+            z-index: 10;
         }
 
         .card {
             background: var(--card);
-            padding: 30px;
-            border-radius: 30px;
-            box-shadow: var(--shadow);
-            text-align: center;
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
             width: 350px;
+            cursor: move;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
         }
 
-        /* Sketch Pad */
-        canvas {
-            background: white;
-            border-radius: 15px;
+        .card:active { transform: scale(1.02); }
+
+        h2 { color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+
+        /* Sketchpad Styles */
+        #sketchpad {
+            background: #ffffff;
+            border-radius: 10px;
             cursor: crosshair;
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1);
+            width: 100%;
         }
 
-        /* Word Effects */
-        .poking-text {
-            display: inline-block;
-            margin: 10px;
-            padding: 10px 20px;
-            background: var(--accent);
+        /* Inputs & Buttons */
+        input {
+            width: 80%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.1);
             color: white;
-            border-radius: 50px;
+            margin-bottom: 10px;
+            outline: none;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
-            animation: float 3s ease-in-out infinite;
+        }
+
+        .btn:hover {
+            box-shadow: 0 0 15px var(--neon);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary { background: #94a3b8; margin-top: 10px; }
+
+        /* Floating Words */
+        .word-bubble {
+            display: inline-block;
+            background: linear-gradient(45deg, var(--accent), #818cf8);
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            cursor: pointer;
+            animation: float 4s infinite ease-in-out;
         }
 
         @keyframes float {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-15px); }
         }
 
-        .bust-animation {
-            animation: bust 0.5s forwards !important;
-        }
-
-        @keyframes bust {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.5); opacity: 0.8; }
-            100% { transform: scale(0); opacity: 0; }
-        }
-
-        /* Buttons & Inputs */
-        input {
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            box-shadow: inset 2px 2px 5px #babecc, inset -5px -5px 10px #ffffff;
-            background: var(--bg);
-            width: 80%;
-            margin-bottom: 15px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: none;
-            background: var(--accent);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 3px 3px 6px rgba(0,0,0,0.2);
-        }
-
-        #theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
+        .bust { animation: explode 0.4s forwards; }
+        @keyframes explode {
+            to { transform: scale(2); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
-    <button id="theme-toggle" class="btn" onclick="toggleTheme()">🌓 Change Theme</button>
+    <canvas id="bg-canvas"></canvas>
 
-    <h1 style="margin-top: 50px;">Creative Developer Hub</h1>
+    <h1 style="margin-top: 30px; text-shadow: 0 0 10px var(--accent);">Pro Interactive Hub v3.0</h1>
 
-    <div class="main-layout">
-        <div class="card">
-            <h2>Word Magician</h2>
-            <p>Type "wrong" to see a bust animation!</p>
-            <input type="text" id="word-input" placeholder="Type a word...">
-            <button class="btn" onclick="addNewWord()">Add & Fly</button>
-            <div id="container" style="margin-top: 20px;"></div>
+    <div class="dashboard">
+        <div class="card" draggable="true" id="word-card">
+            <h2>Word Poker</h2>
+            <p>Try: "Party" or "Winner"</p>
+            <input type="text" id="word-in" placeholder="Type here...">
+            <button class="btn" onclick="spawnWord()">Magic Add</button>
+            <div id="word-wall" style="margin-top: 20px;"></div>
         </div>
 
-        <div class="card">
-            <h2>Quick Sketch</h2>
-            <canvas id="sketchpad" width="300" height="300"></canvas>
-            <br><br>
-            <button class="btn" onclick="clearCanvas()">Clear Sketch</button>
+        <div class="card" draggable="true" id="sketch-card">
+            <h2>Neon Sketch</h2>
+            <canvas id="sketchpad" width="300" height="250"></canvas>
+            <div style="margin-top: 10px;">
+                <button class="btn" onclick="clearPad()">Reset</button>
+                <button class="btn btn-secondary" onclick="saveImage()">Download PNG</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- 1. Dark Mode Logic with Storage ---
-        if(localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark-mode');
+        // 1. Background Particles Logic
+        const bgCanvas = document.getElementById('bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.onresize = resize;
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * bgCanvas.width;
+                this.y = Math.random() * bgCanvas.height;
+                this.size = Math.random() * 2;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if(this.x > bgCanvas.width) this.x = 0;
+                if(this.y > bgCanvas.height) this.y = 0;
+            }
+            draw() {
+                bgCtx.fillStyle = 'rgba(56, 189, 248, 0.5)';
+                bgCtx.beginPath();
+                bgCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                bgCtx.fill();
+            }
         }
 
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
-            localStorage.setItem('theme', theme);
-        }
+        for(let i=0; i<100; i++) particles.push(new Particle());
 
-        // --- 2. Word Logic & "Bust" Animation ---
-        function addNewWord() {
-            const input = document.getElementById('word-input');
-            const container = document.getElementById('container');
+        function animateBg() {
+            bgCtx.clearRect(0,0, bgCanvas.width, bgCanvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        // 2. Confetti & Word Logic
+        function spawnWord() {
+            const input = document.getElementById('word-in');
+            const wall = document.getElementById('word-wall');
             const val = input.value.trim();
+            if(!val) return;
 
-            if (val === "") return;
-
-            const span = document.createElement('span');
-            span.className = 'poking-text';
-            span.innerText = val;
-
-            // Spelling check: If "wrong" is in the word, it will bust
-            if (val.toLowerCase().includes("wrong") || val.toLowerCase().includes("error")) {
-                span.style.background = "#ff4757";
-                setTimeout(() => {
-                    span.classList.add('bust-animation');
-                    setTimeout(() => span.remove(), 500);
-                }, 1000);
+            // Check for special words
+            if(["party", "winner", "success", "congrats"].includes(val.toLowerCase())) {
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             }
 
-            span.onclick = () => {
-                span.classList.add('bust-animation');
-                setTimeout(() => span.remove(), 500);
+            const span = document.createElement('span');
+            span.className = 'word-bubble';
+            span.innerText = val;
+            span.onclick = function() {
+                this.classList.add('bust');
+                setTimeout(() => this.remove(), 400);
             };
 
-            container.appendChild(span);
+            wall.appendChild(span);
             input.value = "";
         }
 
-        // Enter key support
-        document.getElementById('word-input').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') addNewWord();
-        });
-
-        // --- 3. Sketch Pad Logic ---
+        // 3. Sketchpad with Neon Color
         const canvas = document.getElementById('sketchpad');
         const ctx = canvas.getContext('2d');
         let drawing = false;
 
-        canvas.addEventListener('mousedown', () => drawing = true);
-        canvas.addEventListener('mouseup', () => {
-            drawing = false;
-            ctx.beginPath();
-        });
-
-        canvas.addEventListener('mousemove', draw);
-
-        function draw(e) {
-            if (!drawing) return;
+        canvas.onmousedown = () => drawing = true;
+        canvas.onmouseup = () => { drawing = false; ctx.beginPath(); };
+        canvas.onmousemove = (e) => {
+            if(!drawing) return;
             ctx.lineWidth = 3;
             ctx.lineCap = 'round';
-            ctx.strokeStyle = document.body.classList.contains('dark-mode') ? '#88c0d0' : '#6d5dfc';
-
+            ctx.strokeStyle = '#38bdf8';
             const rect = canvas.getBoundingClientRect();
             ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        };
+
+        function clearPad() { ctx.clearRect(0,0,300,250); }
+        
+        function saveImage() {
+            const link = document.createElement('a');
+            link.download = 'my-sketch.png';
+            link.href = canvas.toDataURL();
+            link.click();
         }
 
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+        // 4. Simple Drag Logic for Cards
+        document.querySelectorAll('.card').forEach(card => {
+            card.ondragstart = (e) => {
+                e.dataTransfer.setData('text/plain', null);
+            };
+        });
     </script>
 </body>
 </html>
