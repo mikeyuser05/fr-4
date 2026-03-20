@@ -1,132 +1,222 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Pro Interactive Site</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Interactive Hub</title>
     <style>
-        /* Variables for easy color switching */
         :root {
-            --bg-color: #f0f0f0;
-            --card-bg: white;
-            --text-color: #333;
-            --accent: #6200ee;
+            --bg: #e0e5ec;
+            --card: #e0e5ec;
+            --text: #31344b;
+            --accent: #6d5dfc;
+            --shadow: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5);
         }
 
-        /* This class gets added when we click the Dark Mode button */
         .dark-mode {
-            --bg-color: #1a1a1a;
-            --card-bg: #2d2d2d;
-            --text-color: #f0f0f0;
-            --accent: #03dac6;
+            --bg: #1a1d23;
+            --card: #242933;
+            --text: #e5e9f0;
+            --accent: #88c0d0;
+            --shadow: 5px 5px 15px #121417, -5px -5px 15px #2a303a;
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: all 0.4s ease;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            transition: 0.5s;
+            overflow-x: hidden;
         }
 
-        .container {
-            background: var(--card-bg);
+        /* Layout */
+        .main-layout {
+            display: flex;
+            gap: 30px;
             padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            text-align: center;
-            max-width: 500px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
+        .card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            width: 350px;
+        }
+
+        /* Sketch Pad */
+        canvas {
+            background: white;
+            border-radius: 15px;
+            cursor: crosshair;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Word Effects */
         .poking-text {
             display: inline-block;
-            font-size: 28px;
-            font-weight: bold;
-            color: var(--accent);
-            transition: all 0.2s ease;
+            margin: 10px;
+            padding: 10px 20px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50px;
             cursor: pointer;
-            padding: 5px;
+            transition: 0.3s;
+            animation: float 3s ease-in-out infinite;
         }
 
-        .poking-text:hover {
-            transform: scale(1.4) rotate(-5deg);
-            filter: drop-shadow(0 0 10px var(--accent));
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
+        .bust-animation {
+            animation: bust 0.5s forwards !important;
+        }
+
+        @keyframes bust {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        /* Buttons & Inputs */
         input {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            margin-top: 20px;
-            background: var(--card-bg);
-            color: var(--text-color);
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: inset 2px 2px 5px #babecc, inset -5px -5px 10px #ffffff;
+            background: var(--bg);
+            width: 80%;
+            margin-bottom: 15px;
         }
 
         .btn {
-            padding: 10px 15px;
-            border-radius: 5px;
+            padding: 10px 20px;
+            border-radius: 10px;
             border: none;
             background: var(--accent);
             color: white;
+            font-weight: bold;
             cursor: pointer;
-            margin: 5px;
+            box-shadow: 3px 3px 6px rgba(0,0,0,0.2);
         }
 
-        #dark-btn {
-            position: absolute;
+        #theme-toggle {
+            position: fixed;
             top: 20px;
             right: 20px;
+            z-index: 100;
         }
     </style>
 </head>
 <body>
 
-    <button id="dark-btn" class="btn" onclick="toggleDark()">Toggle Dark Mode</button>
+    <button id="theme-toggle" class="btn" onclick="toggleTheme()">🌓 Change Theme</button>
 
-    <div class="container">
-        <h1>Word Poker Pro</h1>
-        <p>Type a word and hit enter!</p>
-        
-        <div id="word-list">
-            <span class="poking-text">Hello</span>
+    <h1 style="margin-top: 50px;">Creative Developer Hub</h1>
+
+    <div class="main-layout">
+        <div class="card">
+            <h2>Word Magician</h2>
+            <p>Type "wrong" to see a bust animation!</p>
+            <input type="text" id="word-input" placeholder="Type a word...">
+            <button class="btn" onclick="addNewWord()">Add & Fly</button>
+            <div id="container" style="margin-top: 20px;"></div>
         </div>
 
-        <br>
-        <input type="text" id="user-input" placeholder="Type here...">
-        <button class="btn" onclick="addWord()">Add Word</button>
+        <div class="card">
+            <h2>Quick Sketch</h2>
+            <canvas id="sketchpad" width="300" height="300"></canvas>
+            <br><br>
+            <button class="btn" onclick="clearCanvas()">Clear Sketch</button>
+        </div>
     </div>
 
     <script>
-        // 1. Function to add words
-        function addWord() {
-            const input = document.getElementById('user-input');
-            const wordList = document.getElementById('word-list');
-
-            if (input.value.trim() !== "") {
-                const newSpan = document.createElement('span');
-                newSpan.className = 'poking-text';
-                newSpan.innerText = input.value;
-                
-                wordList.append(", ");
-                wordList.appendChild(newSpan);
-                input.value = "";
-            }
+        // --- 1. Dark Mode Logic with Storage ---
+        if(localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
         }
 
-        // 2. Function to toggle Dark Mode
-        function toggleDark() {
+        function toggleTheme() {
             document.body.classList.toggle('dark-mode');
+            const theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            localStorage.setItem('theme', theme);
         }
 
-        // 3. Allow pressing "Enter" key to add word
-        document.getElementById("user-input").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                addWord();
-            }
-        });
-    </script>
+        // --- 2. Word Logic & "Bust" Animation ---
+        function addNewWord() {
+            const input = document.getElementById('word-input');
+            const container = document.getElementById('container');
+            const val = input.value.trim();
 
+            if (val === "") return;
+
+            const span = document.createElement('span');
+            span.className = 'poking-text';
+            span.innerText = val;
+
+            // Spelling check: If "wrong" is in the word, it will bust
+            if (val.toLowerCase().includes("wrong") || val.toLowerCase().includes("error")) {
+                span.style.background = "#ff4757";
+                setTimeout(() => {
+                    span.classList.add('bust-animation');
+                    setTimeout(() => span.remove(), 500);
+                }, 1000);
+            }
+
+            span.onclick = () => {
+                span.classList.add('bust-animation');
+                setTimeout(() => span.remove(), 500);
+            };
+
+            container.appendChild(span);
+            input.value = "";
+        }
+
+        // Enter key support
+        document.getElementById('word-input').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') addNewWord();
+        });
+
+        // --- 3. Sketch Pad Logic ---
+        const canvas = document.getElementById('sketchpad');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        canvas.addEventListener('mousedown', () => drawing = true);
+        canvas.addEventListener('mouseup', () => {
+            drawing = false;
+            ctx.beginPath();
+        });
+
+        canvas.addEventListener('mousemove', draw);
+
+        function draw(e) {
+            if (!drawing) return;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = document.body.classList.contains('dark-mode') ? '#88c0d0' : '#6d5dfc';
+
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    </script>
 </body>
 </html>
